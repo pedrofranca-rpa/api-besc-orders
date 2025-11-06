@@ -1,0 +1,17 @@
+-- DROP ALL TABLES (in dependency-safe order)
+
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS tax_records CASCADE;
+DROP TABLE IF EXISTS ipi_taxes CASCADE;
+DROP TABLE IF EXISTS icms_taxes CASCADE;
+DROP TABLE IF EXISTS support_tickets CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS shipment CASCADE;
+DROP TABLE IF EXISTS proposals CASCADE;
+DROP TABLE IF EXISTS customers CASCADE;
+
+-- Drop status tables last (no dependencies)
+DROP TABLE IF EXISTS shipment_statuses CASCADE;
+DROP TABLE IF EXISTS proposal_statuses CASCADE;
+DROP TABLE IF EXISTS ticket_statuses CASCADE;
+DROP TABLE IF EXISTS order_statuses CASCADE;

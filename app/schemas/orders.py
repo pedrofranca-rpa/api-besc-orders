@@ -1,0 +1,48 @@
+from pydantic import BaseModel, ConfigDict
+from typing import Optional, List
+from datetime import datetime
+from app.schemas.products import ProductResponse, ProductBase
+
+
+class OrderBase(BaseModel):
+    customer_id: int
+    vale_order_id: int
+    status_id: int
+    total_value: float
+    payment_id: int
+    portal: str
+    center: str
+
+    proposal_id: Optional[int] = None
+    besc_order_id: Optional[int] = None
+    contract_number: Optional[str] = None
+    invoice_number: Optional[str] = None
+
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrderCreate(OrderBase):
+    """Schema for creating an order with optional product list."""
+
+    products: Optional[List[ProductBase]] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrderResponse(OrderBase):
+    """Schema representing a single order."""
+
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrderWithProducts(OrderResponse):
+    """Schema that includes related products."""
+
+    products: List[ProductResponse] = []
+
+    model_config = ConfigDict(from_attributes=True)
