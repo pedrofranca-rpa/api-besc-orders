@@ -9,10 +9,9 @@ from app.schemas.orders import OrderCreate, OrderWithProducts
 from app.models.payments import Payment as PaymentModel
 
 
-# 🟢 Create Order
 async def create_order(db: AsyncSession, data: OrderCreate) -> JSONResponse:
     try:
-        # 🟡 Check for duplicates
+        # 🟡 Check for duplicate Vale order
         result = await db.execute(
             select(OrderModel).where(OrderModel.vale_order_id == data.vale_order_id)
         )
@@ -25,27 +24,42 @@ async def create_order(db: AsyncSession, data: OrderCreate) -> JSONResponse:
                 },
             )
 
-        result = await db.execute(
-            select(PaymentModel).where(PaymentModel.id == data.payment_id)
-        )
-        existing_payment = result.scalar_one_or_none()
-        if existing_payment:
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "message": f"An payment with number {data.payment_id} already exists."
-                },
+        # 🟡 Validate payment_id (if provided)
+        if data.payment_id:
+            # 1️⃣ Check if payment exists
+            result = await db.execute(
+                select(PaymentModel).where(PaymentModel.id == data.payment_id)
             )
+            payment = result.scalar_one_or_none()
+            if not payment:
+                return JSONResponse(
+                    status_code=404,
+                    content={
+                        "message": f"Payment with id {data.payment_id} not found."
+                    },
+                )
 
-        # 🟢 Create the main order
+            # 2️⃣ Check if payment_id already used in another order
+            result = await db.execute(
+                select(OrderModel).where(OrderModel.payment_id == data.payment_id)
+            )
+            payment_in_use = result.scalar_one_or_none()
+            if payment_in_use:
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "message": f"Payment {data.payment_id} is already linked to another order."
+                    },
+                )
+
+        # 🟢 Create main order
         order = OrderModel(**data.model_dump(exclude={"products"}))
         db.add(order)
         await db.commit()
         await db.refresh(order)
 
-        # ✅ Automatically convert decimals and datetimes
+        # ✅ Serialize safely
         order_data = jsonable_encoder(order)
-
         return JSONResponse(
             status_code=201,
             content={
@@ -58,7 +72,10 @@ async def create_order(db: AsyncSession, data: OrderCreate) -> JSONResponse:
         await db.rollback()
         return JSONResponse(
             status_code=500,
-            content={"message": "Internal error while creating order", "error": str(e)},
+            content={
+                "message": "Internal error while creating order",
+                "error": str(e),
+            },
         )
 
 

@@ -17,12 +17,6 @@ async def create_tax_record(data: TaxCreate, db: AsyncSession = Depends(get_db))
     """
 
     # If neither ICMS nor IPI is provided, raise an error
-    if not data.icms and not data.ipi:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            detail="ICMS ou IPI deve ser passado!",
-        )
-
     # Convert Pydantic models to dicts (or None)
     icms_data = data.icms.model_dump() if data.icms else None
     ipi_data = data.ipi.model_dump() if data.ipi else None

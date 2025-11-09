@@ -4,6 +4,7 @@ from typing import Optional
 
 class ProductBase(BaseModel):
     order_id: Optional[int] = None
+    item: Optional[str] = None
     tax_id: Optional[int] = None
     part_number: Optional[str] = None
     description: Optional[str] = None

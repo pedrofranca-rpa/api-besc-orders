@@ -16,6 +16,7 @@ class Product(Base):
         Integer, ForeignKey("tax.id", onupdate="CASCADE", ondelete="SET NULL")
     )
 
+    item = Column(String(10))
     part_number = Column(String(50))
     description = Column(Text)
     ncm_code = Column(String(20))

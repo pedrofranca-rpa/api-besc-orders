@@ -10,7 +10,7 @@ from app.services.orders import (
 )
 from app.schemas.orders import OrderCreate, OrderWithProducts, OrderResponse
 
-router = APIRouter(prefix="/api/order")
+router = APIRouter(prefix="/api/orders")
 
 
 @router.post("/", response_model=OrderResponse)
