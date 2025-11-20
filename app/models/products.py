@@ -23,8 +23,8 @@ class Product(Base):
     unit = Column(String(10))
     quantity = Column(Integer, default=0)
     unit_price = Column(Numeric(12, 2), default=0)
-    material = Column(String(50))
-    origin = Column(String(50))
+    material = Column(String(255))
+    origin = Column(String(255))
 
     # Relationships
     order = relationship(

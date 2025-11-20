@@ -111,22 +111,32 @@ CREATE TABLE IF NOT EXISTS tax (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table-PT: order_items
 CREATE TABLE IF NOT EXISTS products (
     id SERIAL PRIMARY KEY,
-    order_id INTEGER NOT NULL REFERENCES orders(id)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    tax_record_id INTEGER REFERENCES tax_records(id)
-        ON UPDATE CASCADE ON DELETE SET NULL,
+    order_id INTEGER NOT NULL,
+    tax_id INTEGER,
+    item VARCHAR(10),
     part_number VARCHAR(50),
     description TEXT,
     ncm_code VARCHAR(20),
     unit VARCHAR(10),
     quantity INTEGER DEFAULT 0,
-    unit_price NUMERIC(12,2) DEFAULT 0,
+    unit_price NUMERIC(12, 2) DEFAULT 0,
     material VARCHAR(50),
-    origin VARCHAR(50),
-    total_price NUMERIC(14,2) DEFAULT 0,
+    origin VARCHAR(255),
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_products_orders
+        FOREIGN KEY (order_id)
+        REFERENCES orders (id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_products_tax
+        FOREIGN KEY (tax_id)
+        REFERENCES tax (id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
 );

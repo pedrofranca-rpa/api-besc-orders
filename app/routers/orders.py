@@ -5,10 +5,15 @@ from app.services.orders import (
     create_order,
     get_order_with_products,
     get_all_orders,
-    update_order,
+    update_order_status,
     delete_order,
 )
-from app.schemas.orders import OrderCreate, OrderWithProducts, OrderResponse
+from app.schemas.orders import (
+    OrderCreate,
+    OrderWithProducts,
+    OrderResponse,
+    OrderUpdater,
+)
 
 router = APIRouter(prefix="/api/orders")
 
@@ -31,8 +36,8 @@ async def get_all(
 
 
 @router.put("/{id}", response_model=OrderWithProducts)
-async def update(id: int, pedido: OrderCreate, db: AsyncSession = Depends(get_db)):
-    return await update_order(db, id, pedido)
+async def update(id: int, data: OrderUpdater, db: AsyncSession = Depends(get_db)):
+    return await update_order_status(db, id, data.status_id)
 
 
 @router.delete("/{id}", response_model=dict)

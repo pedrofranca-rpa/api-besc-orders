@@ -1,5 +1,9 @@
 # app/database.py
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from contextlib import asynccontextmanager
@@ -9,15 +13,12 @@ from sqlalchemy.orm import configure_mappers
 # ================================
 # CONFIGURAÇÃO: URL & Engine
 # ================================
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./database.db")
+DATABASE_URL = os.getenv("DATABASE_URL")
+print(DATABASE_URL)
 ECHO_SQL = os.getenv("ECHO_SQL", "true").lower() == "true"
 
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=ECHO_SQL,
-    future=True,
-    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
-)
+
+engine = create_async_engine(DATABASE_URL, echo=ECHO_SQL, future=True, connect_args={})
 
 # ================================
 # SESSION FACTORY

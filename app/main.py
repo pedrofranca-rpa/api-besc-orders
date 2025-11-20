@@ -1,5 +1,5 @@
 # app/main.py
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 
 # Importa rotas
 from app.core.security import jwt_middleware

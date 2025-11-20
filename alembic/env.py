@@ -26,40 +26,6 @@ target_metadata = None
 # ... etc.
 
 
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from alembic import context
-
-# 🟢 importe o Base do seu projeto
-from app.db.base import Base  # ajuste o caminho se for diferente
-
-# Configuração padrão do Alembic
-config = context.config
-fileConfig(config.config_file_name)
-
-# 🟢 define o target_metadata
-target_metadata = Base.metadata
-
-
-def run_migrations_online():
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
-
-    with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,  # 🟢 aqui é o ponto-chave
-            compare_type=True,  # detecta alterações de tipo
-            compare_server_default=True,  # detecta defaults
-        )
-
-        with context.begin_transaction():
-            context.run_migrations()
-
-
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -82,6 +48,28 @@ def run_migrations_offline() -> None:
 
     with context.begin_transaction():
         context.run_migrations()
+
+
+def run_migrations_online() -> None:
+    """Run migrations in 'online' mode.
+
+    In this scenario we need to create an Engine
+    and associate a connection with the context.
+
+    """
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section, {}),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+
+    with connectable.connect() as connection:
+        context.configure(
+            connection=connection, target_metadata=target_metadata
+        )
+
+        with context.begin_transaction():
+            context.run_migrations()
 
 
 if context.is_offline_mode():

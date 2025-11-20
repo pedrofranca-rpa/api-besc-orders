@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, ForeignKey
+from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
@@ -21,15 +21,15 @@ class Order(Base):
         ForeignKey("orders_status.id", onupdate="CASCADE", ondelete="RESTRICT"),
         default=0,
     )
-    vale_order_id = Column(Integer, unique=True, nullable=False)
+    state = Column(String(3))
+    vale_order_id = Column(BigInteger, unique=True, nullable=False)
     total_value = Column(Numeric(12, 2), nullable=False)
 
     # Relationships
 
     portal = Column(String(50))
     center = Column(String(100))
-    vale_order_id = Column(Integer, unique=True, nullable=False)
-    besc_order_id = Column(Integer)
+    besc_order_id = Column(BigInteger, unique=True, nullable=True)
     contract_number = Column(String(100))
     invoice_number = Column(String(50))
     total_value = Column(Numeric(12, 2), nullable=False)

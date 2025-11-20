@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from sqlalchemy import delete, select
@@ -5,24 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from app.models.orders import Order as OrderModel
 from app.models.products import Product as ProductModel
-from app.schemas.orders import OrderCreate, OrderWithProducts
+from app.models.status.orders import OrdersStatus
+from app.schemas.orders import OrderCreate, OrderUpdater, OrderWithProducts
 from app.models.payments import Payment as PaymentModel
 
 
 async def create_order(db: AsyncSession, data: OrderCreate) -> JSONResponse:
     try:
-        # 🟡 Check for duplicate Vale order
-        result = await db.execute(
-            select(OrderModel).where(OrderModel.vale_order_id == data.vale_order_id)
-        )
-        existing_order = result.scalar_one_or_none()
-        if existing_order:
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "message": f"An order with number {data.vale_order_id} already exists."
-                },
-            )
 
         # 🟡 Validate payment_id (if provided)
         if data.payment_id:
@@ -111,71 +101,26 @@ async def get_order_with_products(db: AsyncSession, order_number: int):
     )
 
 
-# 🟠 Update order
-async def update_order(db: AsyncSession, order_id: int, data: OrderCreate):
-    try:
-        result = await db.execute(select(OrderModel).where(OrderModel.id == order_id))
-        order = result.scalars().first()
+async def update_order_status(db: AsyncSession, vale_order_id: int, status_id: int):
+    result = await db.execute(
+        select(OrderModel).where(OrderModel.vale_order_id == vale_order_id)
+    )
+    order = result.scalars().first()
 
-        if not order:
-            return JSONResponse(status_code=404, content={"message": "Order not found"})
+    if not order:
+        raise HTTPException(404, "Order not found")
 
-        # Update order fields
-        for key, value in data.model_dump(
-            exclude_unset=True, exclude={"products"}
-        ).items():
-            setattr(order, key, value)
+    order.status_id = status_id
+    await db.commit()
+    await db.refresh(order)
 
-        db.add(order)
-        await db.commit()
-        await db.refresh(order)
-
-        # Update products (if provided)
-        if data.products:
-            # Remove existing products
-            await db.execute(
-                delete(ProductModel).where(ProductModel.order_id == order_id)
-            )
-            await db.commit()
-
-            # Insert new products
-            for p in data.products:
-                product = ProductModel(**p.model_dump(), order_id=order.id)
-                db.add(product)
-            await db.commit()
-
-        # Fetch updated products
-        result_products = await db.execute(
-            select(ProductModel).where(ProductModel.order_id == order.id)
-        )
-        products = result_products.scalars().all()
-
-        return JSONResponse(
-            status_code=200,
-            content={
-                "message": "Order updated successfully!",
-                "order": OrderWithProducts.model_validate(
-                    {**order.__dict__, "products": products},
-                    from_attributes=True,
-                ).model_dump(),
-            },
-        )
-
-    except IntegrityError as e:
-        await db.rollback()
-        return JSONResponse(
-            status_code=400,
-            content={
-                "message": "Database integrity error",
-                "error": str(e.orig),
-            },
-        )
-    except Exception as e:
-        await db.rollback()
-        return JSONResponse(
-            status_code=500,
-            content={"message": "Internal error while updating order", "error": str(e)},
-        )
+    return JSONResponse(
+        status_code=200,
+        content={
+            "message": "Status updated!",
+            "order": jsonable_encoder(order),
+        },
+    )
 
 
 # 🔴 Delete order

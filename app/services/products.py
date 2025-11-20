@@ -27,14 +27,6 @@ async def create_product(
         if not result.scalar_one_or_none():
             raise HTTPException(400, "Invalid tax record ID — record not found.")
 
-    result = await db.execute(
-        select(ProductModel).where(ProductModel.part_number == product_in.part_number)
-    )
-    product_pn = result.scalars().first()
-
-    if product_pn:
-        raise HTTPException(404, "Part Number exists")
-
     # Create product
     db_product = ProductModel(**product_in.model_dump())
     db_product.order_id = order.id
@@ -43,7 +35,7 @@ async def create_product(
     try:
         await db.commit()
         await db.refresh(db_product)
-    except Exception:
+    except Exception as e:
         await db.rollback()
         raise HTTPException(400, "Error while saving product.")
 

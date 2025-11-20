@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 from datetime import datetime
 from app.schemas.products import ProductResponse, ProductBase
@@ -12,7 +12,7 @@ class OrderBase(BaseModel):
     payment_id: int
     portal: str
     center: str
-
+    state: str
     proposal_id: Optional[int] = None
     besc_order_id: Optional[int] = None
     contract_number: Optional[str] = None
@@ -22,6 +22,10 @@ class OrderBase(BaseModel):
     updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class OrderUpdater(BaseModel):
+    status_id: int = Field(..., description="ID do novo status do pedido")
 
 
 class OrderCreate(OrderBase):
