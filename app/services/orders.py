@@ -3,12 +3,11 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
 from app.models.orders import Order as OrderModel
 from app.models.products import Product as ProductModel
-from app.models.status.orders import OrdersStatus
-from app.schemas.orders import OrderCreate, OrderUpdater, OrderWithProducts
+from app.schemas.orders import OrderCreate, OrderWithProducts
 from app.models.payments import Payment as PaymentModel
+from sqlalchemy.orm import selectinload
 
 
 async def create_order(db: AsyncSession, data: OrderCreate) -> JSONResponse:
@@ -179,33 +178,31 @@ async def get_order(db: AsyncSession, order_id: int):
     )
 
 
-# 🟣 Get all orders
-async def get_all_orders(db: AsyncSession):
-    result = await db.execute(select(OrderModel))
-    orders = result.scalars().all()
+async def get_all_orders(db: AsyncSession, skip: int = 0, limit: int = 10):
+    result = await db.execute(
+        select(OrderModel)
+        .options(selectinload(OrderModel.products))
+        .offset(skip)
+        .limit(limit)
+    )
+
+    orders = result.scalars().unique().all()
 
     if not orders:
         return JSONResponse(status_code=404, content={"message": "No orders found"})
 
-    orders_with_products = []
-
-    for order in orders:
-        result_prod = await db.execute(
-            select(ProductModel).where(ProductModel.order_id == order.id)
-        )
-        products = result_prod.scalars().all()
-
-        order_schema = OrderWithProducts.model_validate(
-            {**order.__dict__, "products": products}, from_attributes=True
-        ).model_dump()
-
-        orders_with_products.append(order_schema)
+    orders_schema = [
+        OrderWithProducts.model_validate(order, from_attributes=True).model_dump()
+        for order in orders
+    ]
 
     return JSONResponse(
         status_code=200,
-        content={
-            "message": "Orders retrieved successfully!",
-            "total": len(orders_with_products),
-            "orders": orders_with_products,
-        },
+        content=jsonable_encoder(
+            {
+                "message": "Orders retrieved successfully!",
+                "total": len(orders_schema),
+                "orders": orders_schema,
+            }
+        ),
     )
