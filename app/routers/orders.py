@@ -28,7 +28,7 @@ async def get_order(id: int, db: AsyncSession = Depends(get_db)):
     return await get_order_with_products(db, id)
 
 
-@router.get("/", response_model=list[OrderWithProducts])
+@router.get("/pending/", response_model=list[OrderWithProducts])
 async def get_all(
     db: AsyncSession = Depends(get_db), skip: int = Query(0), limit: int = Query(100)
 ):

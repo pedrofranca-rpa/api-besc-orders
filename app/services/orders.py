@@ -184,6 +184,7 @@ async def get_all_orders(db: AsyncSession, skip: int = 0, limit: int = 10):
         .options(selectinload(OrderModel.products))
         .offset(skip)
         .limit(limit)
+        .filter(OrderModel.status_id == 2)
     )
 
     orders = result.scalars().unique().all()
