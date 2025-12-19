@@ -23,16 +23,16 @@ async def create(pedido: OrderCreate, db: AsyncSession = Depends(get_db)):
     return await create_order(db, pedido)
 
 
-@router.get("/{id}", response_model=OrderWithProducts)
-async def get_order(id: int, db: AsyncSession = Depends(get_db)):
-    return await get_order_with_products(db, id)
-
-
-@router.get("/pending/", response_model=list[OrderWithProducts])
+@router.get("/pending", response_model=list[OrderWithProducts])
 async def get_all(
     db: AsyncSession = Depends(get_db), skip: int = Query(0), limit: int = Query(100)
 ):
     return await get_all_orders(db, skip, limit)
+
+
+@router.get("/get_order/{id}", response_model=OrderWithProducts)
+async def get_order(id: int, db: AsyncSession = Depends(get_db)):
+    return await get_order_with_products(db, id)
 
 
 @router.put("/{id}", response_model=OrderWithProducts)
