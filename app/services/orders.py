@@ -187,6 +187,7 @@ async def get_all_orders(db: AsyncSession, skip: int = 0, limit: int = 10):
         .filter(OrderModel.status_id == 2)
     )
 
+    # Get unique order
     orders = result.scalars().unique().all()
 
     if not orders:
