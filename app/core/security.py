@@ -57,7 +57,12 @@ async def jwt_middleware(request: Request, call_next):
     if not auth_header or not auth_header.startswith("Bearer "):
         return JSONResponse(
             status_code=401,
-            content={"detail": "Token ausente ou inválido"},
+            content={
+                "detail": "Token ausente ou inválido"
+                + str(auth_header)
+                + str(request.url.path)
+                + str(request.headers)
+            },
         )
 
     token = auth_header.split(" ")[1]
